@@ -9,9 +9,9 @@ const Index = () => {
       <div className="min-h-screen bg-background p-4 md:p-8">
         <div className="container mx-auto">
           <header className="mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Candlestick Market Data</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Stock Market Data</h1>
             <p className="text-muted-foreground mt-2">
-              Real-time market analysis with put and call volume data
+              Real-time stock analysis with volume data
             </p>
           </header>
           

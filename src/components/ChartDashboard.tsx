@@ -8,18 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import CandlestickChart from './CandlestickChart';
 import { useChartData } from '../hooks/useChartData';
 
-const SYMBOLS = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'INFY'];
+// Updated symbols for Alpha Vantage API
+const SYMBOLS = ['IBM', 'MSFT', 'AAPL', 'GOOGL', 'AMZN'];
 const INTERVALS = [
   { value: '1m', label: '1 min' },
   { value: '5m', label: '5 min' },
   { value: '15m', label: '15 min' },
   { value: '30m', label: '30 min' },
   { value: '1h', label: '1 hour' },
-  { value: '1d', label: '1 day' },
 ];
 
 const ChartDashboard: React.FC = () => {
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('NIFTY');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('IBM');
   const [selectedInterval, setSelectedInterval] = useState<string>('5m');
   
   const { chartData, isLoading, isError, lastRefreshed, refreshData } = useChartData(
@@ -32,7 +32,7 @@ const ChartDashboard: React.FC = () => {
     <Card className="h-full border-gray-800 bg-background shadow-xl">
       <CardHeader className="border-b border-gray-800 pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle className="font-bold text-xl">Market Chart</CardTitle>
+          <CardTitle className="font-bold text-xl">Stock Chart</CardTitle>
           
           <div className="flex gap-2 items-center">
             <span className="text-sm text-muted-foreground">
