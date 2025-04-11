@@ -2,7 +2,7 @@
 import { ChartApiResponse, CandleData } from '../types/chart';
 
 // Using Alpha Vantage API (free tier)
-const API_KEY = 'demo'; // Using demo key, for production use your own key
+const API_KEY = 'OPDADVHGW1EDOZ99'; // Using demo key, for production use your own key
 const BASE_URL = 'https://www.alphavantage.co/query';
 
 export async function fetchCandleData(
