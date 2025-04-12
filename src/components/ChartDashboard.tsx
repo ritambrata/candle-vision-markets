@@ -1,15 +1,29 @@
 
 import React, { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Command, CommandInput } from "@/components/ui/command";
 import CandlestickChart from './CandlestickChart';
 import { useChartData } from '../hooks/useChartData';
 
-// Updated symbols for Alpha Vantage API
-const SYMBOLS = ['IBM', 'MSFT', 'AAPL', 'GOOGL', 'AMZN'];
+// Default symbols for search suggestions
+const AVAILABLE_STOCKS = [
+  { symbol: 'IBM', name: 'International Business Machines' },
+  { symbol: 'MSFT', name: 'Microsoft Corporation' },
+  { symbol: 'AAPL', name: 'Apple Inc.' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.' },
+  { symbol: 'AMZN', name: 'Amazon.com Inc.' },
+  { symbol: 'TSLA', name: 'Tesla, Inc.' },
+  { symbol: 'META', name: 'Meta Platforms, Inc.' },
+  { symbol: 'NVDA', name: 'NVIDIA Corporation' },
+  { symbol: 'NFLX', name: 'Netflix, Inc.' },
+  { symbol: 'PYPL', name: 'PayPal Holdings, Inc.' }
+];
+
 const INTERVALS = [
   { value: '1m', label: '1 min' },
   { value: '5m', label: '5 min' },
@@ -20,6 +34,7 @@ const INTERVALS = [
 
 const ChartDashboard: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>('IBM');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedInterval, setSelectedInterval] = useState<string>('5m');
   
   const { chartData, isLoading, isError, lastRefreshed, refreshData } = useChartData(
@@ -27,6 +42,23 @@ const ChartDashboard: React.FC = () => {
     selectedInterval,
     true
   );
+
+  // Filter stocks based on search query
+  const filteredStocks = AVAILABLE_STOCKS.filter(stock => 
+    stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Handle stock selection from search results
+  const handleSelectStock = (symbol: string) => {
+    setSelectedSymbol(symbol);
+    setSearchQuery('');
+  };
+
+  // Clear search input
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   return (
     <Card className="h-full border-gray-800 bg-background shadow-xl">
@@ -51,26 +83,58 @@ const ChartDashboard: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex gap-4 mt-3">
-          <Select 
-            defaultValue={selectedSymbol}
-            onValueChange={(value) => setSelectedSymbol(value)}
-          >
-            <SelectTrigger className="w-[180px] bg-muted">
-              <SelectValue placeholder="Select symbol" />
-            </SelectTrigger>
-            <SelectContent>
-              {SYMBOLS.map((symbol) => (
-                <SelectItem key={symbol} value={symbol}>{symbol}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row gap-4 mt-3">
+          <div className="relative flex-grow">
+            <div className="relative">
+              <Input
+                placeholder="Search for a stock symbol or name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10 w-full bg-muted"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              {searchQuery && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0" 
+                  onClick={handleClearSearch}
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Clear search</span>
+                </Button>
+              )}
+            </div>
+            
+            {searchQuery && filteredStocks.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="p-1">
+                  {filteredStocks.map((stock) => (
+                    <button
+                      key={stock.symbol}
+                      className="w-full text-left px-3 py-2 hover:bg-muted rounded-sm flex items-center justify-between"
+                      onClick={() => handleSelectStock(stock.symbol)}
+                    >
+                      <span className="font-medium">{stock.symbol}</span>
+                      <span className="text-muted-foreground text-sm">{stock.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {searchQuery && filteredStocks.length === 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg p-4 text-center">
+                <p className="text-muted-foreground">No stocks found matching "{searchQuery}"</p>
+              </div>
+            )}
+          </div>
           
           <Select 
             defaultValue={selectedInterval}
             onValueChange={(value) => setSelectedInterval(value)}
           >
-            <SelectTrigger className="w-[120px] bg-muted">
+            <SelectTrigger className="w-full sm:w-[120px] bg-muted">
               <SelectValue placeholder="Select interval" />
             </SelectTrigger>
             <SelectContent>
@@ -81,6 +145,18 @@ const ChartDashboard: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        
+        <div className="mt-2">
+          <p className="text-sm">
+            <span className="font-medium">Current Selection:</span> 
+            <span className="ml-2 text-primary">{selectedSymbol}</span>
+            {AVAILABLE_STOCKS.find(s => s.symbol === selectedSymbol)?.name && (
+              <span className="ml-2 text-muted-foreground">
+                ({AVAILABLE_STOCKS.find(s => s.symbol === selectedSymbol)?.name})
+              </span>
+            )}
+          </p>
         </div>
       </CardHeader>
       

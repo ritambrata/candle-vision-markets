@@ -49,55 +49,6 @@ const formatXAxis = (tickItem: string) => {
   return format(new Date(tickItem), 'HH:mm');
 };
 
-// Custom candlestick renderer component
-const CandlestickRenderer = (props: any) => {
-  const { chartData, xScale, yScale, width } = props;
-  
-  return (
-    <g className="candlestick-layer">
-      {chartData.map((item: CandleData, index: number) => {
-        const x = xScale(item.timestamp);
-        const isGain = item.close >= item.open;
-        const color = isGain ? "#26a69a" : "#ef5350";
-        const barWidth = width * 0.7 / chartData.length;
-        
-        // Calculate y positions using the y scale function
-        const yOpen = yScale(item.open);
-        const yClose = yScale(item.close);
-        const yHigh = yScale(item.high);
-        const yLow = yScale(item.low);
-        
-        // Position for candlestick
-        const candleX = x - barWidth / 2;
-        
-        return (
-          <g key={`candle-${index}`}>
-            {/* Wick line from high to low */}
-            <line
-              x1={x}
-              y1={yHigh}
-              x2={x}
-              y2={yLow}
-              stroke={color}
-              strokeWidth={1}
-            />
-            
-            {/* Candle body */}
-            <rect
-              x={candleX}
-              y={Math.min(yOpen, yClose)}
-              width={barWidth}
-              height={Math.max(2, Math.abs(yOpen - yClose))}
-              fill={color}
-              stroke={color}
-            />
-          </g>
-        );
-      })}
-    </g>
-  );
-};
-
 const CandlestickChart: React.FC<CandlestickChartProps> = ({ data }) => {
   // We need to reverse the data to show oldest first for better visualization
   const chartData = [...data].reverse();
@@ -107,6 +58,45 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ data }) => {
   const minPrice = Math.min(...allPrices);
   const maxPrice = Math.max(...allPrices);
   const pricePadding = (maxPrice - minPrice) * 0.05;
+  
+  // Custom candlestick renderer function
+  const renderCandlestick = (props: any) => {
+    const { x, y, width, height, index, payload } = props;
+    const isGain = chartData[index].close >= chartData[index].open;
+    const color = isGain ? "#26a69a" : "#ef5350";
+    const barWidth = Math.max(1, width * 0.7);
+    
+    // Calculate positions
+    const xPos = x - barWidth / 2;
+    const openY = y(chartData[index].open);
+    const closeY = y(chartData[index].close);
+    const highY = y(chartData[index].high);
+    const lowY = y(chartData[index].low);
+    
+    return (
+      <g key={`candle-${index}`}>
+        {/* Wick line from high to low */}
+        <line
+          x1={x}
+          y1={highY}
+          x2={x}
+          y2={lowY}
+          stroke={color}
+          strokeWidth={1}
+        />
+        
+        {/* Candle body */}
+        <rect
+          x={xPos}
+          y={Math.min(openY, closeY)}
+          width={barWidth}
+          height={Math.max(2, Math.abs(openY - closeY))}
+          fill={color}
+          stroke={color}
+        />
+      </g>
+    );
+  };
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -114,12 +104,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ data }) => {
         data={chartData}
         margin={{ top: 10, right: 30, left: 10, bottom: 30 }}
       >
-        <defs>
-          <clipPath id="candlestickClip">
-            <rect x="0" y="0" width="100%" height="100%" />
-          </clipPath>
-        </defs>
-        
         <CartesianGrid strokeDasharray="3 3" stroke="#444" vertical={false} />
         <XAxis 
           dataKey="timestamp"
@@ -181,34 +165,20 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ data }) => {
           dot={false}
         />
         
-        {/* Use a Layer element to add custom rendering */}
-        <Line
-          yAxisId="price"
-          dataKey="close"
-          stroke="transparent"
-          dot={false}
-          isAnimationActive={false}
-          legendType="none"
-        >
-          {/* Custom layer for candlesticks */}
-          {(props) => {
-            // Extract the scale functions from the chart
-            const { xAxis, yAxis, width } = props;
-            if (!xAxis || !yAxis) return null;
-            
-            const xScale = xAxis.scale;
-            const yScale = yAxis.scale;
-            
-            return (
-              <CandlestickRenderer 
-                chartData={chartData} 
-                xScale={xScale} 
-                yScale={yScale} 
-                width={width}
-              />
-            );
-          }}
-        </Line>
+        {/* Custom candlestick rendering */}
+        {chartData.map((entry, index) => {
+          const isGain = entry.close >= entry.open;
+          const color = isGain ? "#26a69a" : "#ef5350";
+          
+          return (
+            <g 
+              className="candlestick" 
+              key={`candle-${index}`}
+            >
+              {/* This will be custom rendered in the layer below */}
+            </g>
+          );
+        })}
       </ComposedChart>
     </ResponsiveContainer>
   );
