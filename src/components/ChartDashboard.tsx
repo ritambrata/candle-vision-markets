@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { RefreshCw, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
@@ -10,18 +9,25 @@ import { Command, CommandInput } from "@/components/ui/command";
 import CandlestickChart from './CandlestickChart';
 import { useChartData } from '../hooks/useChartData';
 
-// Default symbols for search suggestions
+// Updated stock list including Indian stocks (NSE & BSE)
 const AVAILABLE_STOCKS = [
+  // Indian Stocks (NSE)
+  { symbol: 'RELIANCE.BSE', name: 'Reliance Industries Ltd (BSE)' },
+  { symbol: 'RELIANCE.NSE', name: 'Reliance Industries Ltd (NSE)' },
+  { symbol: 'TCS.NSE', name: 'Tata Consultancy Services Ltd' },
+  { symbol: 'HDFCBANK.NSE', name: 'HDFC Bank Ltd' },
+  { symbol: 'INFY.NSE', name: 'Infosys Ltd' },
+  { symbol: 'ITC.NSE', name: 'ITC Ltd' },
+  { symbol: 'SBIN.NSE', name: 'State Bank of India' },
+  { symbol: 'ICICIBANK.NSE', name: 'ICICI Bank Ltd' },
+  { symbol: 'HINDUNILVR.NSE', name: 'Hindustan Unilever Ltd' },
+  { symbol: 'TATAMOTORS.NSE', name: 'Tata Motors Ltd' },
+  // US Stocks for comparison
   { symbol: 'IBM', name: 'International Business Machines' },
   { symbol: 'MSFT', name: 'Microsoft Corporation' },
   { symbol: 'AAPL', name: 'Apple Inc.' },
   { symbol: 'GOOGL', name: 'Alphabet Inc.' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.' },
-  { symbol: 'TSLA', name: 'Tesla, Inc.' },
-  { symbol: 'META', name: 'Meta Platforms, Inc.' },
-  { symbol: 'NVDA', name: 'NVIDIA Corporation' },
-  { symbol: 'NFLX', name: 'Netflix, Inc.' },
-  { symbol: 'PYPL', name: 'PayPal Holdings, Inc.' }
+  { symbol: 'AMZN', name: 'Amazon.com Inc.' }
 ];
 
 const INTERVALS = [
@@ -33,7 +39,7 @@ const INTERVALS = [
 ];
 
 const ChartDashboard: React.FC = () => {
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('IBM');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('RELIANCE.BSE');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedInterval, setSelectedInterval] = useState<string>('5m');
   
@@ -64,7 +70,7 @@ const ChartDashboard: React.FC = () => {
     <Card className="h-full border-gray-800 bg-background shadow-xl">
       <CardHeader className="border-b border-gray-800 pb-3">
         <div className="flex justify-between items-center">
-          <CardTitle className="font-bold text-xl">Stock Chart</CardTitle>
+          <CardTitle className="font-bold text-xl">Indian & Global Stock Chart</CardTitle>
           
           <div className="flex gap-2 items-center">
             <span className="text-sm text-muted-foreground">

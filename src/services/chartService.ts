@@ -6,7 +6,7 @@ const API_KEY = 'OPDADVHGW1EDOZ99'; // Using demo key, for production use your o
 const BASE_URL = 'https://www.alphavantage.co/query';
 
 export async function fetchCandleData(
-  symbol: string = 'IBM',
+  symbol: string = 'RELIANCE.NSE',
   interval: string = '5min',
   from?: string,
   to?: string
@@ -15,8 +15,17 @@ export async function fetchCandleData(
     // Map our interval format to Alpha Vantage's format
     const alphaVantageInterval = mapIntervalToAlphaVantage(interval);
     
+    // Parse the symbol correctly for Indian stock exchange symbols
+    let cleanSymbol = symbol;
+    // For BSE/NSE stocks, Alpha Vantage uses a different format
+    if (symbol.includes('.BSE') || symbol.includes('.NSE')) {
+      cleanSymbol = symbol.replace('.', ':');
+    }
+    
     // Build URL with query parameters
-    const url = `${BASE_URL}?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=${alphaVantageInterval}&apikey=${API_KEY}&outputsize=full`;
+    const url = `${BASE_URL}?function=TIME_SERIES_INTRADAY&symbol=${cleanSymbol}&interval=${alphaVantageInterval}&apikey=${API_KEY}&outputsize=full`;
+    console.log('Fetching data from:', url);
+    
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -25,9 +34,15 @@ export async function fetchCandleData(
 
     const data = await response.json();
     
-    // Check if we got the demo API key message
-    if (data.Information && data.Information.includes("demo API key")) {
-      console.log("Using mock data due to demo API key limitations");
+    // Check if we got the demo API key message or error
+    if (data.Information && data.Information.includes("API key")) {
+      console.log("Using mock data due to API key limitations");
+      return generateMockCandleData(symbol, 100);
+    }
+    
+    // Check if we got a valid response
+    if (data["Error Message"]) {
+      console.error("API Error:", data["Error Message"]);
       return generateMockCandleData(symbol, 100);
     }
     
@@ -55,14 +70,31 @@ function mapIntervalToAlphaVantage(interval: string): string {
 function generateMockCandleData(symbol: string, count: number): ChartApiResponse {
   const data: CandleData[] = [];
   const now = new Date();
-  let basePrice = symbol === 'AAPL' ? 180 : 
-                 symbol === 'MSFT' ? 350 : 
-                 symbol === 'GOOGL' ? 140 : 
-                 symbol === 'AMZN' ? 170 : 100;
+  
+  // Set base price based on the stock (including Indian stocks)
+  let basePrice = 
+    symbol === 'RELIANCE.NSE' || symbol === 'RELIANCE.BSE' ? 2850 : 
+    symbol === 'TCS.NSE' ? 3500 : 
+    symbol === 'HDFCBANK.NSE' ? 1620 :
+    symbol === 'INFY.NSE' ? 1450 :
+    symbol === 'ICICIBANK.NSE' ? 1050 :
+    symbol === 'ITC.NSE' ? 450 :
+    symbol === 'SBIN.NSE' ? 780 :
+    symbol === 'HINDUNILVR.NSE' ? 2550 :
+    symbol === 'TATAMOTORS.NSE' ? 950 :
+    symbol === 'AAPL' ? 180 : 
+    symbol === 'MSFT' ? 350 : 
+    symbol === 'GOOGL' ? 140 : 
+    symbol === 'AMZN' ? 170 : 100;
+  
+  // Simulate market open hours for India (9:15 AM to 3:30 PM IST)
+  // and account for time difference if needed
+  let isIndianStock = symbol.includes('.NSE') || symbol.includes('.BSE');
   
   for (let i = 0; i < count; i++) {
     // Generate random price movements
-    const change = (Math.random() - 0.5) * 2; // Random between -1 and 1
+    const volatilityFactor = isIndianStock ? 0.8 : 1.0; // Adjust volatility for market
+    const change = (Math.random() - 0.5) * 2 * volatilityFactor; // Random between -1 and 1
     const percentChange = change / 100;
     
     const open = basePrice;
@@ -72,8 +104,12 @@ function generateMockCandleData(symbol: string, count: number): ChartApiResponse
     const high = Math.max(open, close) * (1 + Math.random() * 0.01);
     const low = Math.min(open, close) * (1 - Math.random() * 0.01);
     
-    // Generate random volume
-    const volume = Math.floor(Math.random() * 1000000) + 100000;
+    // Generate random volume (higher for large cap stocks)
+    const volumeFactor = 
+      symbol === 'RELIANCE.NSE' || symbol === 'TCS.NSE' || symbol === 'ICICIBANK.NSE' ? 2.0 :
+      symbol === 'MSFT' || symbol === 'AAPL' ? 3.0 : 1.0;
+    
+    const volume = Math.floor((Math.random() * 1000000) + 100000) * volumeFactor;
     const putVolume = Math.floor(volume * (0.3 + Math.random() * 0.2));
     const callVolume = Math.floor(volume * (0.3 + Math.random() * 0.2));
     
